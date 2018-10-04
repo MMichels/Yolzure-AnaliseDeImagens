@@ -1,0 +1,38 @@
+<Principal@BoxLayout>:
+    orientation: 'vertical'
+    padding: '5px'
+    # Barra de endereços
+    BoxLayout:
+        id: barraEndereco
+        size_hint: .8, .1
+        pos_hint: {'center_x': .5, 'center_y': .9}
+        orientation: 'horizontal'
+        padding: 10
+        spacing: 5
+        Label:
+            size_hint: .05, None
+            height: 30
+            text:'Diretorio: '
+        TextInput:
+            id: campo_diretorio
+            size_hint: .5, None
+            height: 30
+            multiline: False
+        Button:
+            size_hint: .08, None
+            height: 30
+            text: 'Procurar'
+            on_press: root.clk_btn_procurar()
+        Button:
+            id: carregar
+            size_hint: .08, None
+            height: 30
+            text: 'Carregar'
+            on_press: root.clk_btn_carregar()
+    # Area da imagem:
+    BoxLayout:
+        Image:
+            id: campo_imagem
+
+
+Principal:
