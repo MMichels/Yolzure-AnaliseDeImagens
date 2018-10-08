@@ -210,6 +210,14 @@ class SimpleDarknet:
             raise TypeError('deteccoes deve ser um objeto da classe list()')
         self._deteccoes = value
 
+    @property
+    def isRunning(self):
+        return self._running
+
+    @isRunning.setter
+    def isRunning(self, value):
+        self._running = value
+
     def __init__(self, imagem: str = None, config: str = None,
                  modelo: str = None, arquivo_classes: str = None):
         """
@@ -231,6 +239,7 @@ class SimpleDarknet:
         self._classes = str('')
         self._blob = numpy.ndarray(0)
         self._taxa_min = float(0.5)
+        self._running = False
 
         if arquivo_classes is not None:
             self.classes = arquivo_classes
@@ -456,12 +465,14 @@ class SimpleDarknet:
             Realiza todos os metodos do processamento da imagem em sequencia
         :return: None
         """
+        self.isRunning = True
         self.config_blob()
         self.calc_previsoes()
         self.calc_metricas()
         self.localizar_deteccoes()
         self.desenhar_caixas()
         self.escrever_legendas()
+        self.isRunning = False
 
     def exibir_results(self):
         """

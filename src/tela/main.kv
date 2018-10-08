@@ -38,21 +38,15 @@
         # size_hint: 1., 1.
         pos_hint: {'center_x': .5, 'center_y':.5}
         id: box_img
-#        Imagem:
-#            size_hint: 1, .9
-##            # fundo transparente na imagem.
-##            color: 1, 1, 1, .0
-##            canvas:
-##                Color:
-##                    rgba: (1, 1, 1, .1)
-##                Rectangle:
-##                    texture: self.texture
-##                    pos: self.pos
-##                    size: self.size
-#            id: campo_imagem
+        Image:
+            size_hint: 1, .9
+            # fundo transparente na imagem.
+            color: 1, 1, 1, .0
+            id: campo_imagem
 
         #Botoes de ação da imagem.
         BoxLayout:
+            id: box_btns_img
             orientation: 'horizontal'
             size_hint: 1, None
             height: 30
@@ -62,6 +56,7 @@
                 on_press: root.clk_btn_analizar()
             Button:
                 text: 'Limpar'
+                on_press: root.clk_btn_limpar()
 
 
 Principal:
