@@ -38,8 +38,8 @@ class Controle:
         self.__spd__ = SimpleDarknet()
 
     def load_visio(self):
-        self.__visio__.__key__ = '22e69212b68d4215875afd57e3f14da7'
-        self.__visio__.__vision_url__ = 'https://brazilsouth.api.cognitive.microsoft.com/vision/v1.0/'
+        self.__visio__.__key__ = 'your azure visio key'
+        self.__visio__.__vision_url__ = 'your azure visio'
         self.__visio__.img_path = self.dir_img
         recursos = [CompleteVisioRequest.DESCRICAO, CompleteVisioRequest.TAGS]
         self.__visio__.recursos = recursos
