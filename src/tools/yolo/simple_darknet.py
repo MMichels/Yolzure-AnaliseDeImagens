@@ -194,7 +194,7 @@ class SimpleDarknet:
                 deteccoes[][1] -> str da classe correspondente ao objeto detectado
                 deteccoes[][2] -> array contendo os valores de [x_centro, y_centro, largura, altura, x1, x2, y1, y2]
                 deteccoes[][3] -> cor randomizada pelo metodo desenhar_caixas()
-        :return: list() contendo as deteccoes calculadas pelo metodo localizar_deteccoes()
+        :return: list(list()) contendo as deteccoes calculadas pelo metodo localizar_deteccoes()
         """
         return self._deteccoes
 
@@ -230,7 +230,7 @@ class SimpleDarknet:
         # Inicializa as variaveis privadas.
         self._nat = None
         self._previsoes = numpy.ndarray(0)
-        self._deteccoes = list()
+        self._deteccoes = list(list())
         self._img = numpy.ndarray(0)
         self._altura = int(0)
         self._largura = int(0)
@@ -249,7 +249,6 @@ class SimpleDarknet:
             self.img = imagem
             self.config = config
             self.modelo = modelo
-            self.config_nat()
 
         # se o unico parametro com valor for a imagem, configura a imagem e exibe uma msg de aviso
         elif imagem is not None and config is None and modelo is None and arquivo_classes is None:
@@ -466,6 +465,7 @@ class SimpleDarknet:
         :return: None
         """
         self.isRunning = True
+        self.config_nat()
         self.config_blob()
         self.calc_previsoes()
         self.calc_metricas()
