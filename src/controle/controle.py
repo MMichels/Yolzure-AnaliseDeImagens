@@ -10,7 +10,13 @@ class Controle:
         return self.__dir_img__
 
     @dir_img.setter
-    def dir_img(self, valor):
+    def dir_img(self, valor: str):
+        """
+        Setter do diretorio da imagem, responsavel por garantir que é uma imagem valida e existente.
+        :param valor: diretorio da imagem
+        :return:
+        :except TypeError, FileNotFoundError
+        """
         if valor is None or valor is '':
             self.__dir_img__ = valor
         else:
@@ -33,13 +39,22 @@ class Controle:
         return self.__spd__
 
     def __init__(self):
+        """
+        Metodo inicial, define os atibutos __dir_img__ = armazena o diretorio da imagem.
+        __visio__ = instancia de completeVisioRequest
+        __spd__ = instancia de SimpleDarkNet
+        """
         self.__dir_img__ = str()
         self.__visio__ = CompleteVisioRequest()
         self.__spd__ = SimpleDarknet()
 
     def load_visio(self):
-        self.__visio__.__key__ = 'your azure visio key'
-        self.__visio__.__vision_url__ = 'your azure visio'
+        """
+        Realiza a pre configuração do objeto visio para a consulta a API
+        :return:
+        """
+        self.__visio__.__key__ = 'Your azure key'
+        self.__visio__.__vision_url__ = 'https://brazilsouth.api.cognitive.microsoft.com/vision/v1.0/'
         self.__visio__.img_path = self.dir_img
         recursos = [CompleteVisioRequest.DESCRICAO, CompleteVisioRequest.TAGS]
         self.__visio__.recursos = recursos
@@ -48,6 +63,10 @@ class Controle:
         self.__visio__ = CompleteVisioRequest()
 
     def load_spd(self):
+        """
+        Realiza a pre configuração do objeto spd para consulta a darknet
+        :return:
+        """
         imagem = self.dir_img
         cfg = '../tools/yolo/cfg/yolov3.cfg'
         weigth = '../tools/yolo/weigths/yolov3.weights'
