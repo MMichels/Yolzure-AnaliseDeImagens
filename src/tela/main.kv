@@ -1,8 +1,6 @@
 <Principal@BoxLayout>:
     orientation: 'vertical'
     padding: '5px'
-    size: '1080px', '720px'
-
     # Barra de endereços
     BoxLayout:
         id: barraEndereco
@@ -24,24 +22,17 @@
             size_hint: .08, None
             height: 30
             text: 'Procurar'
-            on_press: root.clk_btn_procurar()
-        Button:
-            id: carregar
-            size_hint: .08, None
-            height: 30
-            text: 'Carregar'
-            on_press: root.clk_btn_carregar()
+            on_press: root.procurar()
     # Area da imagem:
     BoxLayout:
         size_hint: .95, .95
         orientation: 'vertical'
-        # size_hint: 1., 1.
         pos_hint: {'center_x': .5, 'center_y':.5}
         id: box_img
         Image:
             size_hint: 1, 1
             # fundo transparente na imagem.
-            color: 1, 1, 1, .0
+            source: 'thumbs\\init.jpg'
             id: campo_imagem
         #Botoes de ação da imagem.
         BoxLayout:
@@ -53,35 +44,42 @@
             pos_hint: {'x': .0, 'center_y':.05}
             Button:
                 text: 'Analizar'
-                on_press: root.clk_btn_analizar()
+                on_press: root.analizar()
             Button:
                 text: 'Limpar'
-                on_press: root.clk_btn_limpar()
+                on_press: root.limpar()
     # Area de resultados:
     BoxLayout:
         orientation: 'horizontal'
-        size_hint: .98, .35
+        size_hint: .98, .40
         padding: 5, 5
         # Descrição da imagem.
         BoxLayout:
             orientation: 'vertical'
             size_hint: 1., 1.
             id: box_descricao
-            spacing: 2
+            spacing: .5
             Label:
+                size_hint: .5, .1
                 text: "Descricao da imagem:"
                 font_size: 18
             Label:
+                size_hint: 1, .2
+                pos_hint: {'x': .151}
                 id: lblDescricao
-                text: '...'
+                valign: 'center'
+                halign: 'left'
             Label:
+                size_hint: .5, .1
                 text: 'Objetos identificados:'
                 font_size: 18
             Label:
-                #pos_hint: {'x':.1, 'y':.9}
+                size_hint: 1, .6
+                pos_hint: {'x': .1}
+                valign: 'center'
+                halign: 'left'
                 id: lblObjetos
                 multiline: True
-                text: '...'
         # Caixa de audio
         BoxLayout:
             orientation: 'vertical'
@@ -89,7 +87,5 @@
                 text: 'Audio descricao'
                 font_size: '20'
 
-
 Principal:
-    size: '1080px', '720px'
-    padding: 5, 5
+    size_hint: 1., 1.

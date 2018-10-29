@@ -53,7 +53,7 @@ class Controle:
         Realiza a pre configuração do objeto visio para a consulta a API
         :return:
         """
-        self.__visio__.__key__ = 'Your azure key'
+        self.__visio__.__key__ = '191e3dde5b204de4a4ebddab6abb6c58'
         self.__visio__.__vision_url__ = 'https://brazilsouth.api.cognitive.microsoft.com/vision/v1.0/'
         self.__visio__.img_path = self.dir_img
         recursos = [CompleteVisioRequest.DESCRICAO, CompleteVisioRequest.TAGS]

@@ -13,6 +13,10 @@ from kivy.uix.button import Button
 from kivy.clock import Clock
 from kivy.uix.popup import Popup
 
+from kivy.config import Config
+Config.set('graphics', 'width', '1360')
+Config.set('graphics', 'height', '728')
+
 
 class Principal(BoxLayout):
     """
@@ -33,12 +37,11 @@ class Principal(BoxLayout):
         Existe com o proposito de automatizar e facilitar a maneira de exibir os resultados, ja que os processos 
         acontecem em multithread, evita conflitos ao gravar e ler nos demais objetos.
         """
-        self.timer = Clock
-        self.timer.schedule_interval(self.verificar_processamento, 1.0)
         """Esvazia o campo de imagem"""
-        self.clk_btn_limpar()
+        self.limpar()
+        self.timer = None
 
-    def clk_btn_procurar(self):
+    def procurar(self):
         """
         Funcao executada quando o botao procurar é clicado, cria um objeto FileChooser() que permite selecionar um
         arquivo de imagem navegando atraves das pastas do computador, é uma janelinha de procurar pré-montada, esta janela
@@ -49,8 +52,9 @@ class Principal(BoxLayout):
         self.controle.dir_img = fl.find_file()
         self.ids.campo_diretorio.text = \
             self.controle.dir_img
+        self.carregar()
 
-    def clk_btn_carregar(self):
+    def carregar(self):
         """
         Apos procurar a imagem e salvar o diretorio da mesma no objeto de controle, é necessario carregar a imagem no
         widget "campo_imagem" da tela, para isso, basta salvar o diretorio da imagem no atributo source e executar o
@@ -60,10 +64,9 @@ class Principal(BoxLayout):
         self.ids.campo_imagem.texture = None
         self.ids.campo_imagem.source = self.controle.dir_img
         """Retira a transparencia da imagem..."""
-        self.ids.campo_imagem.color = (1, 1, 1, 1)
         self.ids.campo_imagem.reload()
 
-    def clk_btn_analizar(self):
+    def analizar(self):
         """
         Metodo invocado ao pressionar o botao "analizar", verifica se ja nao existe uma analise de imagem em andamento,
         para evitar conflitos multithread, e adiciona o label de aviso de analise em andamento na tela principal, e chama
@@ -71,29 +74,36 @@ class Principal(BoxLayout):
         :return:
         """
         try:
-            # Verifica se nao existe uma instancia da darknet em execução
-            if not self.controle.darknet.isRunning:
-                box_temp = self.ids.box_btns_img
-                # realiza um swap para adicionar label de aviso entre a imagem e os botoes
-                self.ids.box_img.remove_widget(self.ids.box_btns_img)
-                self.ids.box_img.add_widget(Label(text='Analizando, Aguarde...', id='lblAguarde',
-                                                  size_hint=(1, .05)))
-                self.ids.box_img.add_widget(box_temp)
-                # invoca o metodo de analise da imagem
-                self.processar_imagem()
-        except Exception:
-            texto = str(Exception)
-            btn = Button("Ok")
-            erro = Popup(title='Erro', content=(texto, btn), auto_dismiss=False)
-            btn.bind(on_press=erro.dismiss())
+            if self.controle.dir_img is not None and len(self.controle.dir_img) > 10:
+                # Verifica se nao existe uma instancia da darknet em execução
+                if not self.controle.darknet.isRunning:
+                    box_temp = self.ids.box_btns_img
+                    # realiza um swap para adicionar label de aviso entre a imagem e os botoes
+                    self.ids.box_img.remove_widget(self.ids.box_btns_img)
+                    self.ids.box_img.add_widget(Label(text='Analizando, Aguarde...', id='lblAguarde',
+                                                      size_hint=(1, .05)))
+                    self.ids.box_img.add_widget(box_temp)
+                    # invoca o metodo de analise da imagem
+                    self.processar_imagem()
+            else:
+                raise TypeError()
+        except TypeError:
+            texto = Label()
+            texto.text = 'Nao foi selecionada uma imagem'
+            btn = Button(text="Ok")
+            pop = BoxLayout(orientation='vertical')
+            pop.add_widget(texto)
+            pop.add_widget(btn)
+            erro = Popup(title='Erro', content=pop, auto_dismiss=False, size_hint=(.3, .2))
+            btn.bind(on_press=erro.dismiss)
             erro.open()
 
-    def clk_btn_limpar(self):
+    def limpar(self):
         """
         Realiza um "reset" na interface grafica, retornando a mesma para o estado inicial
         :return:
         """
-        self.ids.campo_imagem.source = ''
+        self.ids.campo_imagem.source = 'thumbs\\init.jpg'
         self.ids.campo_imagem.reload()
         self.ids.lblDescricao.text = '...'
         self.ids.lblObjetos.text = '...'
@@ -117,6 +127,9 @@ class Principal(BoxLayout):
         # inicia a thread
         proc_visio.start()
 
+        self.timer = Clock
+        self.timer.schedule_interval(self.verificar_processamento, 1.0)
+
     def verificar_processamento(self, dt):
         """
         Verifica se o processamento da imagem ja foi concluido, mais precisamente, verifica qual das etapas do
@@ -130,15 +143,19 @@ class Principal(BoxLayout):
         :param: dt: Necessario para usar com o metodo Clock.schedule_interval
         :return:
         """
-        if len(self.controle.darknet.img) > 1 is not None:
-            if not self.controle.darknet.isRunning:
-                self.atualiza_imagem()
-                self.atualiza_lblobjs()
-                self.controle.new_spd()
-        if not self.controle.visio.isRunning:
-            if self.controle.visio.processado:
-                self.atualiza_descricao()
-                self.controle.new_visio()
+        try:
+            if len(self.controle.darknet.img) > 1 is not None:
+                if not self.controle.darknet.isRunning:
+                    self.atualiza_imagem()
+                    self.atualiza_lblobjs()
+                    self.controle.new_spd()
+            if not self.controle.visio.isRunning:
+                if self.controle.visio.processado:
+                    self.atualiza_descricao()
+                    self.controle.new_visio()
+        except:
+            del self.timer
+
 
     def atualiza_imagem(self):
         """
