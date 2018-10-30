@@ -69,9 +69,9 @@ class Controle:
         :return:
         """
         imagem = self.dir_img
-        cfg = 'D:\\Mateus\\Mega\\Python\\util\\visao\\Yolo\\cfg\\yolov3.cfg'
-        weigth = 'D:\\Mateus\\Mega\\Python\\util\\visao\\Yolo\\weigths\\yolov3.weights'
-        classes = 'D:\\Mateus\\Mega\\Python\\util\\visao\\Yolo\\classes\\yolo.txt'
+        cfg = '..\\..\\..\\..\\..\\util\\visao\\Yolo\\cfg\\yolov3.cfg'
+        weigth = '..\\..\\..\\..\\..\\util\\visao\\Yolo\\weigths\\yolov3.weights'
+        classes = '..\\..\\..\\..\\..\\util\\visao\\Yolo\\classes\\yolo.txt'
         self.__spd__ = SimpleDarknet(imagem, cfg, weigth, classes)
         self.__spd__.taxa_min = .5
 
