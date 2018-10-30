@@ -1,21 +1,27 @@
 # Src Imports
-from controle.controle import Controle
-from tools.filechooser import FileChooser
 from threading import Thread
-import cv2
 
+import cv2
 # kivy imports
 from kivy.app import App
-from kivy.uix.boxlayout import BoxLayout
-from kivy.graphics.texture import Texture
-from kivy.uix.label import Label
-from kivy.uix.button import Button
 from kivy.clock import Clock
+# Configurações Kivy
+from kivy.config import Config
+from kivy.graphics.texture import Texture
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.button import Button
+from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 
-from kivy.config import Config
+from controle.controle import Controle
+from filechooser import FileChooser
+
 Config.set('graphics', 'width', '1360')
 Config.set('graphics', 'height', '728')
+
+from kivy.core.window import Window
+
+Window.clearcolor = (.7, .7, .7, 1)
 
 
 class Principal(BoxLayout):
@@ -40,6 +46,7 @@ class Principal(BoxLayout):
         """Esvazia o campo de imagem"""
         self.limpar()
         self.timer = None
+        self.popup = Popup()
 
     def procurar(self):
         """
@@ -63,6 +70,7 @@ class Principal(BoxLayout):
         """
         self.ids.campo_imagem.texture = None
         self.ids.campo_imagem.source = self.controle.dir_img
+        self.ids.campo_imagem.height = self.ids.campo_imagem.height - 20
         """Retira a transparencia da imagem..."""
         self.ids.campo_imagem.reload()
 
@@ -77,12 +85,9 @@ class Principal(BoxLayout):
             if self.controle.dir_img is not None and len(self.controle.dir_img) > 10:
                 # Verifica se nao existe uma instancia da darknet em execução
                 if not self.controle.darknet.isRunning:
-                    box_temp = self.ids.box_btns_img
-                    # realiza um swap para adicionar label de aviso entre a imagem e os botoes
-                    self.ids.box_img.remove_widget(self.ids.box_btns_img)
-                    self.ids.box_img.add_widget(Label(text='Analizando, Aguarde...', id='lblAguarde',
-                                                      size_hint=(1, .05)))
-                    self.ids.box_img.add_widget(box_temp)
+                    texto = Label(text='Analisando Imagem...\nAguarde')
+                    self.popup = Popup(title='Processando', content=texto, auto_dismiss=False, size_hint=(.3, .2))
+                    self.popup.open()
                     # invoca o metodo de analise da imagem
                     self.processar_imagem()
             else:
@@ -103,10 +108,10 @@ class Principal(BoxLayout):
         Realiza um "reset" na interface grafica, retornando a mesma para o estado inicial
         :return:
         """
-        self.ids.campo_imagem.source = 'thumbs\\init.jpg'
+        self.ids.campo_imagem.source = 'thumbs\\grey_init.jpg'
         self.ids.campo_imagem.reload()
-        self.ids.lblDescricao.text = '...'
-        self.ids.lblObjetos.text = '...'
+        self.ids.lblDescricao.text = ''
+        self.ids.lblObjetos.text = ''
 
     def processar_imagem(self):
         """
@@ -126,6 +131,7 @@ class Principal(BoxLayout):
         proc_visio = Thread(target=self.controle.visio.realizar_consulta)
         # inicia a thread
         proc_visio.start()
+        self.ids.lblDescricao.text = 'Carregando descrição...'
 
         self.timer = Clock
         self.timer.schedule_interval(self.verificar_processamento, 1.0)
@@ -149,13 +155,13 @@ class Principal(BoxLayout):
                     self.atualiza_imagem()
                     self.atualiza_lblobjs()
                     self.controle.new_spd()
+                    self.popup.dismiss()
             if not self.controle.visio.isRunning:
                 if self.controle.visio.processado:
                     self.atualiza_descricao()
                     self.controle.new_visio()
         except:
             del self.timer
-
 
     def atualiza_imagem(self):
         """
@@ -183,7 +189,7 @@ class Principal(BoxLayout):
                         self.ids.box_img.remove_widget(widget)
         except Exception:
             texto = str(Exception)
-            btn = Button("Ok")
+            btn = Button(text="Ok")
             erro = Popup(title='Erro', content=(texto, btn), auto_dismiss=False)
             btn.bind(on_press=erro.dismiss())
             erro.open()
