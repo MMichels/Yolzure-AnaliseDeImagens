@@ -1,4 +1,5 @@
 import os.path
+
 import requests
 
 
@@ -31,7 +32,7 @@ class CompleteVisioRequest:
         self.__vision_url__ = str()
         self.__key__ = str()
         self.__retorno__ = dict()
-        self.isRunning = bool()
+        self.isRunning = False
         self.processado = False
 
         self.__key__ = key

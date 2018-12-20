@@ -1,5 +1,7 @@
-from os.path import isfile
+import os.path
 
+from cfgManager import Config
+from dbmanager import DBManager
 from simple_darknet import SimpleDarknet
 from tools.azure.visio.complete_visio_request import CompleteVisioRequest
 
@@ -23,7 +25,7 @@ class Controle:
         else:
             if not isinstance(valor, str):
                 raise TypeError(f'{valor} nao é uma string!')
-            if not isfile(valor):
+            if not os.path.isfile(valor):
                 raise FileNotFoundError(f'{valor} nao corresponde a um arquivo')
             if not (valor.endswith('.jpg') or valor.endswith('.png') or valor.endswith('jpeg')):
                 raise TypeError(f'O arquivo {valor} nao é um arquivo valido, '
@@ -45,17 +47,21 @@ class Controle:
         __visio__ = instancia de completeVisioRequest
         __spd__ = instancia de SimpleDarkNet
         """
+        os.path.curdir = '../'
         self.__dir_img__ = str()
         self.__visio__ = CompleteVisioRequest()
         self.__spd__ = SimpleDarknet()
+        self.__cnfg__ = self.carregarCNFG()
+        self.__dbman__ = self.carregarDB()
 
     def load_visio(self):
         """
         Realiza a pre configuração do objeto visio para a consulta a API
         :return:
         """
-        self.__visio__.__key__ = '191e3dde5b204de4a4ebddab6abb6c58'
-        self.__visio__.__vision_url__ = 'https://brazilsouth.api.cognitive.microsoft.com/vision/v1.0/'
+        visio_params = self.get_visio_params()
+        self.__visio__.__key__ = visio_params[0][2]
+        self.__visio__.__vision_url__ = visio_params[1][2]
         self.__visio__.img_path = self.dir_img
         recursos = [CompleteVisioRequest.DESCRICAO, CompleteVisioRequest.TAGS]
         self.__visio__.recursos = recursos
@@ -69,11 +75,33 @@ class Controle:
         :return:
         """
         imagem = self.dir_img
-        cfg = '..\\..\\..\\..\\..\\util\\visao\\Yolo\\cfg\\yolov3.cfg'
-        weigth = '..\\..\\..\\..\\..\\util\\visao\\Yolo\\weigths\\yolov3.weights'
-        classes = '..\\..\\..\\..\\..\\util\\visao\\Yolo\\classes\\yolo.txt'
-        self.__spd__ = SimpleDarknet(imagem, cfg, weigth, classes)
-        self.__spd__.taxa_min = .5
+        self.__spd__ = SimpleDarknet(imagem, *SimpleDarknet.YOLOV3.values())
 
     def new_spd(self):
         self.__spd__ = SimpleDarknet()
+
+    def carregarDB(self):
+        db = DBManager(user=self.__cnfg__.get_db_user(),
+                       senha=self.__cnfg__.get_db_passwd(),
+                       end=self.__cnfg__.get_db_url(),
+                       port=self.__cnfg__.get_db_port(),
+                       database=self.__cnfg__.get_db_name())
+        return db
+
+    def carregarCNFG(self):
+        arqkey = open('./controle/chave.key', 'r')
+        chave = arqkey.readline()
+        cfg = Config(chave, './controle/yolzure.cfg')
+        return cfg
+
+    def get_visio_params(self):
+        if self.__dbman__ is not None:
+            sql = "SELECT * FROM parametros WHERE parametro in (%s, %s)"
+            self.__dbman__.abrir_con()
+            retorno = self.__dbman__.executar_select(sql, ["visiokey", "visiourl"])
+            if len(retorno) == 2:
+                return retorno
+            else:
+                raise Exception('Erro ao recuperar parametros da api visio')
+        else:
+            raise Exception('Objeto DBManager nao configurado ou corrompido')

@@ -1,11 +1,11 @@
 # Src Imports
+from cv2 import flip
+from os.path import exists
 from threading import Thread
 
-import cv2
 # kivy imports
 from kivy.app import App
 from kivy.clock import Clock
-# Configurações Kivy
 from kivy.config import Config
 from kivy.graphics.texture import Texture
 from kivy.uix.boxlayout import BoxLayout
@@ -13,14 +13,14 @@ from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 
+# Utils import
 from controle.controle import Controle
-from filechooser import FileChooser
+from fileman import FileChooser
 
+# Configurações Kivy
 Config.set('graphics', 'width', '1360')
 Config.set('graphics', 'height', '728')
-
 from kivy.core.window import Window
-
 Window.clearcolor = (.7, .7, .7, 1)
 
 
@@ -56,7 +56,7 @@ class Principal(BoxLayout):
         :return:
         """
         fl = FileChooser()
-        self.controle.dir_img = fl.find_file()
+        self.controle.dir_img = fl.get_open_file_dir()
         self.ids.campo_diretorio.text = \
             self.controle.dir_img
         self.carregar()
@@ -71,7 +71,7 @@ class Principal(BoxLayout):
         self.ids.campo_imagem.texture = None
         self.ids.campo_imagem.source = self.controle.dir_img
         self.ids.campo_imagem.height = self.ids.campo_imagem.height - 20
-        """Retira a transparencia da imagem..."""
+        # Retira a transparencia da imagem
         self.ids.campo_imagem.reload()
 
     def analizar(self):
@@ -82,19 +82,20 @@ class Principal(BoxLayout):
         :return:
         """
         try:
-            if self.controle.dir_img is not None and len(self.controle.dir_img) > 10:
+            if self.controle.dir_img is not None and exists(self.controle.dir_img):
                 # Verifica se nao existe uma instancia da darknet em execução
-                if not self.controle.darknet.isRunning:
+                if not self.controle.darknet.executando:
                     texto = Label(text='Analisando Imagem...\nAguarde')
                     self.popup = Popup(title='Processando', content=texto, auto_dismiss=False, size_hint=(.3, .2))
                     self.popup.open()
                     # invoca o metodo de analise da imagem
                     self.processar_imagem()
             else:
-                raise TypeError()
-        except TypeError:
+                raise Exception('O arquivo selecionado nao é uma imagem ou nao existe')
+        except Exception as e:
+            self.popup.dismiss()
             texto = Label()
-            texto.text = 'Nao foi selecionada uma imagem'
+            texto.text = 'Erro ao processar imagem: \n{}'.format(e.args)
             btn = Button(text="Ok")
             pop = BoxLayout(orientation='vertical')
             pop.add_widget(texto)
@@ -102,16 +103,17 @@ class Principal(BoxLayout):
             erro = Popup(title='Erro', content=pop, auto_dismiss=False, size_hint=(.3, .2))
             btn.bind(on_press=erro.dismiss)
             erro.open()
+            print(e)
 
     def limpar(self):
         """
         Realiza um "reset" na interface grafica, retornando a mesma para o estado inicial
         :return:
         """
-        self.ids.campo_imagem.source = 'thumbs\\grey_init.jpg'
+        self.ids.campo_imagem.source = 'tela/thumbs/grey_init.jpg'
         self.ids.campo_imagem.reload()
-        self.ids.lblDescricao.text = ''
-        self.ids.lblObjetos.text = ''
+        self.ids.lblDescricao.text = 'Realize a analize de uma imagem'
+        self.ids.lblObjetos.text = 'Realize a analize de uma imagem'
 
     def processar_imagem(self):
         """
@@ -119,22 +121,25 @@ class Principal(BoxLayout):
         threads para executar os metodos de processamento da darknet e da api visio, e inicia estas threads
         :return:
         """
-        # Configura o objeto spd em controle.
-        self.controle.load_spd()
-        # cria a thread para executar o metodo run_deteccao
-        proc_spd = Thread(target=self.controle.darknet.run_deteccao)
-        # inicia a thread
-        proc_spd.start()
-        # configura o objeto visio em controle
-        self.controle.load_visio()
-        # cria a thread para executar o metodo realizar_consulta
-        proc_visio = Thread(target=self.controle.visio.realizar_consulta)
-        # inicia a thread
-        proc_visio.start()
-        self.ids.lblDescricao.text = 'Carregando descrição...'
+        try:
+            # Configura o objeto spd em controle.
+            self.controle.load_spd()
+            # cria a thread para executar o metodo run_deteccao
+            proc_spd = Thread(target=self.controle.darknet.run_deteccao)
+            # inicia a thread
+            proc_spd.start()
+            # configura o objeto visio em controle
+            self.controle.load_visio()
+            # cria a thread para executar o metodo realizar_consulta
+            proc_visio = Thread(target=self.controle.visio.realizar_consulta)
+            # inicia a thread
+            proc_visio.start()
+            self.ids.lblDescricao.text = 'Carregando descrição...'
 
-        self.timer = Clock
-        self.timer.schedule_interval(self.verificar_processamento, 1.0)
+            self.timer = Clock
+            self.timer.schedule_interval(self.verificar_processamento, 1.0)
+        except Exception as e:
+            raise Exception('Erro ao processar imagem, \nCausa:', e)
 
     def verificar_processamento(self, dt):
         """
@@ -151,7 +156,7 @@ class Principal(BoxLayout):
         """
         try:
             if len(self.controle.darknet.img) > 1 is not None:
-                if not self.controle.darknet.isRunning:
+                if not self.controle.darknet.executando:
                     self.atualiza_imagem()
                     self.atualiza_lblobjs()
                     self.controle.new_spd()
@@ -160,8 +165,8 @@ class Principal(BoxLayout):
                 if self.controle.visio.processado:
                     self.atualiza_descricao()
                     self.controle.new_visio()
-        except:
-            del self.timer
+        except Exception as e:
+            self.timer = None
 
     def atualiza_imagem(self):
         """
@@ -174,7 +179,7 @@ class Principal(BoxLayout):
             # Salva a intancia da imagem do objeto darknet
             imagem = self.controle.darknet.img
             # processa os buffers
-            buf1 = cv2.flip(imagem, 0)
+            buf1 = flip(imagem, 0)
             buf = buf1.tostring()
             # Cria as texturas que sao utilizadas pelo widget Imagem
             texture1 = Texture.create(size=(imagem.shape[1], imagem.shape[0]), colorfmt='bgr')
@@ -219,6 +224,7 @@ class Principal(BoxLayout):
             else:
                 break
         self.ids.lblObjetos.text = texto
+        print(texto)
 
     def atualiza_descricao(self):
         """

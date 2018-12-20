@@ -92,16 +92,14 @@
             orientation: 'vertical'
             size_hint: 1., 1.
             id: box_descricao
-            spacing: .5
             Label:
-                size_hint: .5, .1
+                pos_hint: {'center_x': 0.15}
                 text: "Descricao da imagem:"
                 font_size: 18
                 color: 0, 0, 0, 1
             Label:
-                size_hint: 1, .2
-                pos_hint: {'x': .151}
                 id: lblDescricao
+                text: 'Frase de teste'
                 valign: 'center'
                 halign: 'left'
                 color: 0, 0, 0, 1
@@ -110,9 +108,9 @@
                         rgb: .1, .1, .1
                     Rectangle:
                         pos: 0, self.pos[1] + 3
-                        size: root.width, 1
+                        size: root.width/2 - dp(15), 1
             Label:
-                size_hint: .5, .1
+                pos_hint: {'center_x': 0.146}
                 text: 'Objetos identificados:'
                 font_size: 18
                 color: 0, 0, 0, 1
@@ -128,9 +126,14 @@
         BoxLayout:
             orientation: 'vertical'
             Label:
+                size_hint: 1, .3
+                pos_hint: {'center_x': .5}
                 text: 'Audio descricao'
                 font_size: '20'
                 color: 0, 0, 0, 1
+            Label:
+                size_hint: 1, .7
+                text: 'Player aqui'
 
 Principal:
     size_hint: 1., 1.
